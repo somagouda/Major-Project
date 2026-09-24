@@ -145,6 +145,7 @@ export default function App() {
         return (
           <Roadmap 
             user={user} 
+            setActiveTab={setActiveTab}
           />
         );
       case 'practice':

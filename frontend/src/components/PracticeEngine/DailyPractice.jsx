@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ConceptMap from './ConceptMap';
+import ProblemPlatform from './ProblemPlatform';
 
 const questionPool = {
   'Software Development': [
@@ -1364,7 +1365,7 @@ export default function DailyPractice({ user, token, onActionTriggered }) {
   allExplorerQuestions.push(...liveLeetcodeQuestions);
 
   // Switcher state
-  const [activeMode, setActiveMode] = useState('mcq'); // 'mcq', 'algo', 'sql', 'explorer'
+  const [activeMode, setActiveMode] = useState('platform'); // 'platform', 'mcq', 'algo', 'sql', 'explorer'
 
   // Explorer states
   const [explorerSearch, setExplorerSearch] = useState('');
@@ -1854,6 +1855,13 @@ export default function DailyPractice({ user, token, onActionTriggered }) {
         flexWrap: 'wrap'
       }}>
         <button 
+          className={`btn ${activeMode === 'platform' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveMode('platform')}
+          style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+        >
+          🚀 LeetCode Coding Platform
+        </button>
+        <button 
           className={`btn ${activeMode === 'mcq' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveMode('mcq')}
           style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
@@ -1883,7 +1891,12 @@ export default function DailyPractice({ user, token, onActionTriggered }) {
         </button>
       </div>
 
-      <div className="practice-container">
+      {activeMode === 'platform' && (
+        <ProblemPlatform user={user} token={token} onActionTriggered={onActionTriggered} />
+      )}
+
+      {activeMode !== 'platform' && (
+        <div className="practice-container">
         {/* Left Column: Active Practice Workspace */}
         <div>
           {activeMode === 'mcq' && (
@@ -3219,6 +3232,7 @@ export default function DailyPractice({ user, token, onActionTriggered }) {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

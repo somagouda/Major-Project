@@ -8,18 +8,36 @@ const InterviewSessionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['Technical', 'HR'],
+    enum: ['Technical', 'HR', 'Behavioral', 'Coding', 'Resume Based', 'Mixed'],
     default: 'Technical'
   },
+  difficulty: {
+    type: String,
+    enum: ['Easy', 'Medium', 'Hard'],
+    default: 'Medium'
+  },
+  questionCount: {
+    type: Number,
+    default: 5
+  },
+  durationMinutes: {
+    type: Number,
+    default: 15
+  },
+  topics: [{
+    type: String
+  }],
   status: {
     type: String,
-    enum: ['in_progress', 'completed'],
+    enum: ['configured', 'in_progress', 'completed'],
     default: 'in_progress'
   },
   resumeData: {
     fileName: String,
     parsedSkills: [String],
     detectedRoleMatch: String,
+    projects: [String],
+    experience: [String],
     skillGaps: [{
       skill: String,
       priority: {
@@ -28,6 +46,38 @@ const InterviewSessionSchema = new mongoose.Schema({
       }
     }],
     roadmapRecommendations: [String]
+  },
+  questionsList: [{
+    questionId: String,
+    questionText: String,
+    topic: String,
+    difficulty: String,
+    userAnswer: String,
+    isFollowUp: {
+      type: Boolean,
+      default: false
+    },
+    followUpContext: String,
+    evaluation: {
+      technicalKnowledge: Number,
+      relevance: Number,
+      communication: Number,
+      clarity: Number,
+      completeness: Number,
+      confidence: Number,
+      score: Number
+    },
+    feedback: {
+      whatWentWell: String,
+      whatWasMissing: String,
+      whatCouldBeImproved: String,
+      suggestedAnswer: String,
+      topicsToRevise: [String]
+    }
+  }],
+  currentQuestionIndex: {
+    type: Number,
+    default: 0
   },
   chatHistory: [{
     sender: {
@@ -46,9 +96,27 @@ const InterviewSessionSchema = new mongoose.Schema({
     categories: {
       technicalAccuracy: Number,
       communication: Number,
-      structureAndApproach: Number
+      structureAndApproach: Number,
+      problemSolving: Number,
+      relevance: Number,
+      clarity: Number,
+      completeness: Number
     },
     actionableTips: [String]
+  },
+  finalReport: {
+    overallScore: Number,
+    categories: {
+      technicalKnowledge: Number,
+      communication: Number,
+      problemSolving: Number,
+      relevance: Number,
+      clarity: Number,
+      completeness: Number
+    },
+    strengths: [String],
+    weakAreas: [String],
+    recommendedPractice: [String]
   },
   proctorLogs: [{
     type: {
@@ -71,3 +139,4 @@ const InterviewSessionSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('InterviewSession', InterviewSessionSchema);
+
