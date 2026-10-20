@@ -146,6 +146,13 @@ p {
   background: rgba(4, 3, 10, 0.7);
 }
 
+textarea.glass-input {
+  width: 100%;
+  background: rgba(4, 3, 10, 0.5);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+}
+
 /* Button UI */
 .btn {
   display: inline-flex;

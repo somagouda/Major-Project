@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const { auth, memAnalytics } = require('./auth');
 const InterviewSession = require('../models/InterviewSession');
 const StudentAnalytics = require('../models/StudentAnalytics');
+const { analyzeResume, generateResume, extractText } = require('../utils/resumeAnalyzer');
 
 const upload = multer({ limits: { fileSize: 5000000 } }); // Limit 5MB files
 
@@ -260,27 +261,41 @@ function generateDynamicFollowUp(userAnswer, topic) {
   return `Building on your response regarding ${topic || 'system design'}, what specific edge cases or failure scenarios did you test for?`;
 }
 
-// 1. Upload resume (parser mock API)
+// 1. Upload resume: real text extraction + keyword match + ATS checks
 router.post('/upload-resume', auth, upload.single('resume'), async (req, res) => {
-  const fileName = req.file ? req.file.originalname : 'resume_file.pdf';
-  const rawRole = req.body.targetRole || req.user.targetRole || 'Software Development';
-  
-  setTimeout(() => {
-    let role = rawRole;
-    if (rawRole.includes('Full Stack')) role = 'Full Stack';
-    const template = roleTemplates[role] || roleTemplates['Software Development'];
-    
-    const parsedData = {
-      fileName,
-      parsedSkills: template.parsedSkills,
-      detectedRoleMatch: template.detectedRoleMatch || rawRole,
-      projects: template.projects || ['Full Stack Dashboard'],
-      skillGaps: template.skillGaps,
-      roadmapRecommendations: template.roadmapRecommendations
-    };
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload a resume file.' });
+    }
+    const text = await extractText(req.file);
+    const result = analyzeResume({
+      text,
+      role: req.body.targetRole || (req.user && req.user.targetRole) || 'Software Development',
+      company: req.body.company || '',
+      jobDescription: req.body.jobDescription || ''
+    });
+    res.json({ fileName: req.file.originalname, ...result });
+  } catch (err) {
+    res.status(422).json({ message: err.message || 'Could not analyse this resume.' });
+  }
+});
 
-    res.json(parsedData);
-  }, 800);
+// 1b. Generate a new ATS-friendly resume from the analysed profile
+router.post('/generate-resume', auth, (req, res) => {
+  try {
+    const { profile, role, company, extraKeywords } = req.body || {};
+    if (!profile || typeof profile !== 'object') {
+      return res.status(400).json({ message: 'Analyse a resume first, then generate.' });
+    }
+    res.json(generateResume({
+      profile,
+      role,
+      company: typeof company === 'string' ? company.slice(0, 80) : '',
+      extraKeywords: Array.isArray(extraKeywords) ? extraKeywords.slice(0, 40) : []
+    }));
+  } catch (err) {
+    res.status(500).json({ message: 'Resume generation error: ' + err.message });
+  }
 });
 
 // 2. Start Interview Session (POST /start & POST /session)
